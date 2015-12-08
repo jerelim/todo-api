@@ -1,20 +1,14 @@
 var express = require('express');
+
+var bodyParser = require('body-parser');
+
 var app = express();
 var PORT = process.env.PORT || 3000;
 
-var todos = [{
-	id:1,
-	description:"Meet guys for dinner",
-	completed:false
-},{
-	id:2,
-	description:"go buy mop pole",
-	completed:false
-},{
-	id:3,
-	description: "Contact Kelvin",
-	completed:true
-}];
+var todos = [];
+var todoNextId=1;
+
+app.use(bodyParser.json());
 
 app.get('/',function (req , res) {
 	res.send('ToDo API root');
@@ -36,6 +30,18 @@ app.get('/todos/:id',function (req, res) {
 	oneItem = {error:"could not find todo item"};
 	
 	res.status(404).json(oneItem);
+});
+
+// function to save new todo
+app.post('/todos',function (req, res) {
+	var body = req.body;
+	var newtodo = {id:todoNextId ,description:body.description , completed:body.completed};
+	todos.push(newtodo);
+
+	res.send(todos);
+	todoNextId++;
+	console.log(todoNextId);
+
 });
 
 app.listen(PORT,function () {
