@@ -1,6 +1,7 @@
 var express = require('express');
 
 var bodyParser = require('body-parser');
+var _=require('underscore');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -19,29 +20,36 @@ app.get('/todos',function (req, res) {
 });
 
 app.get('/todos/:id',function (req, res) {
-	var id = parseInt(req.params.id,10);
-	var oneItem;
-	for (var i = 0; i < todos.length; i++) {
-		if (todos[i].id===id) {
-			res.json(todos[i]);
-			return;
-		}
+	var todoid = parseInt(req.params.id,10);
+	var oneItem=_.findWhere(todos, {id:todoid});
+
+	if (oneItem) {
+		res.json(oneItem);
+	} else{
+		res.status(404).json('item not found');
 	}
-	oneItem = {error:"could not find todo item"};
 	
-	res.status(404).json(oneItem);
 });
 
 // function to save new todo
 app.post('/todos',function (req, res) {
-	var body = req.body;
-	var newtodo = {id:todoNextId ,description:body.description , completed:body.completed};
-	todos.push(newtodo);
+	try{
+		var body = req.body;
+		if (! _.isBoolean(body.completed) || ! _.isString(body.description) || body.description.trim().length===0 ) {
+			return res.status(400).json('error');
+		}
+		body.description= body.description.trim();
+		// var newtodo = {id:todoNextId ,description:body.description , completed:body.completed};
+		var newtodo= _.pick(body,'description', 'completed');
+		newtodo.id= todoNextId;
+		todos.push(newtodo);
 
-	res.send(todos);
-	todoNextId++;
-	console.log(todoNextId);
-
+		res.send(newtodo);
+		todoNextId++;
+		console.log(todoNextId);
+	}catch(error){
+		return res.status(400).json('Not valid JSON');
+	}
 });
 
 app.listen(PORT,function () {
