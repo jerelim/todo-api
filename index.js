@@ -15,17 +15,27 @@ app.get('/',function (req , res) {
 	res.send('ToDo API root');
 });
 
+// GET /todos?completed=true&q=work
 app.get('/todos',function (req, res) {
-	var queryParams = _.pick(req.query,'description', 'completed');
+	var queryParams = _.pick(req.query,'q', 'completed');
 	var filteredTodos = todos ;
 
-	// if filter only looking for completed items
+	// if filter completed is provided only looking for completed items
 	if ((queryParams.hasOwnProperty('completed') && queryParams.completed=== 'true') || (queryParams.hasOwnProperty('completed') && queryParams.completed=== 'false') ) {
 		filteredTodos = _.where(filteredTodos, {completed: JSON.parse(queryParams.completed) } );
 	}
 
+	// if filter is set to filter into select task
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0  ) {
+		filteredTodos = _.filter(filteredTodos, function (oneItem) {
+			
+			return oneItem.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+		});
+	}
+
 	res.json(filteredTodos);
 });
+
 
 app.get('/todos/:id',function (req, res) {
 	var todoid = parseInt(req.params.id,10);
