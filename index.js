@@ -16,7 +16,15 @@ app.get('/',function (req , res) {
 });
 
 app.get('/todos',function (req, res) {
-	res.json(todos);
+	var queryParams = _.pick(req.query,'description', 'completed');
+	var filteredTodos = todos ;
+
+	// if filter only looking for completed items
+	if ((queryParams.hasOwnProperty('completed') && queryParams.completed=== 'true') || (queryParams.hasOwnProperty('completed') && queryParams.completed=== 'false') ) {
+		filteredTodos = _.where(filteredTodos, {completed: JSON.parse(queryParams.completed) } );
+	}
+
+	res.json(filteredTodos);
 });
 
 app.get('/todos/:id',function (req, res) {
