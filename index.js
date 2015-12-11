@@ -79,7 +79,7 @@ app.delete('/todos/:id', function (req, res) {
    		if (deleted) {
    			res.status(204).send();
    		}else{
-   			res.status(500).json({error:'could not delete item'});
+   			res.status(404).json({error:'could not delete item'});
    		}
    	}).catch(function (error) {
    		res.status(500).json(error);
