@@ -4,8 +4,7 @@ module.exports= function (sequelize, Datatypes) {
 			type: Datatypes.STRING,
 			allowNull:false,
 			validate:{
-				len:[1,250],
-				isInt:false
+				len:[1,250]
 			}
 		},
 		completed:{
