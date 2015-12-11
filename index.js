@@ -31,14 +31,17 @@ app.get('/todos', function (req, res) {
 });
 app.get('/todos/:id', function (req, res) {
     var todoid = parseInt(req.params.id, 10);
-    var oneItem = _.findWhere(todos, {
-        id: todoid
+    db.todo.findById(todoid).then(function (todo) {
+    	
+    	if (todo) {
+    		res.json(todo.toJSON() );
+    	}else{
+    		res.status(404).json({error:'data not found'});
+    	}
+    },function (error) {
+    	res.status(500).send();
     });
-    if (oneItem) {
-        res.json(oneItem);
-    } else {
-        res.status(404).json('item not found');
-    }
+
 });
 // function to save new todo
 app.post('/todos', function (req, res) {
@@ -47,13 +50,8 @@ app.post('/todos', function (req, res) {
         return res.status(400).json('error');
     }
     body.description = body.description.trim();
-    // var newtodo = {id:todoNextId ,description:body.description , completed:body.completed};
     var newtodo = _.pick(body, 'description', 'completed');
-    // newtodo.id = todoNextId;
-    // todos.push(newtodo);
-    // res.send(newtodo);
-    // todoNextId++;
-    // console.log(todoNextId);
+
     console.log(newtodo);
     db.todo.create(newtodo).then(function (todo) {
 		res.json(todo.toJSON() );
