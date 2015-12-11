@@ -70,16 +70,20 @@ app.post('/todos', function (req, res) {
 
 // function to delete one item
 app.delete('/todos/:id', function (req, res) {
-    var todoId = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, {
-        id: todoId
-    });
-    if (!matchedTodo) {
-        return res.status(400).json('could not find item');
-    }
-    // remove the item here
-    todos = _.without(todos, matchedTodo);
-    res.send(todos);
+    var todoid = parseInt(req.params.id, 10);
+   	db.todo.destroy({
+   		where:{
+   			id:todoid
+   		}
+   	}).then(function (deleted) {
+   		if (deleted) {
+   			res.status(204).send();
+   		}else{
+   			res.status(500).json({error:'could not delete item'});
+   		}
+   	}).catch(function (error) {
+   		res.status(500).json(error);
+   	});
 });
 // function to edit one item
 app.put('/todos/:id', function (req, res) {
