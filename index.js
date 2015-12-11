@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var db= require('./db.js');
 var route = require('express/lib/router/route');
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -48,12 +49,19 @@ app.post('/todos', function (req, res) {
     body.description = body.description.trim();
     // var newtodo = {id:todoNextId ,description:body.description , completed:body.completed};
     var newtodo = _.pick(body, 'description', 'completed');
-    newtodo.id = todoNextId;
-    todos.push(newtodo);
-    res.send(newtodo);
-    todoNextId++;
-    console.log(todoNextId);
+    // newtodo.id = todoNextId;
+    // todos.push(newtodo);
+    // res.send(newtodo);
+    // todoNextId++;
+    // console.log(todoNextId);
+    console.log(newtodo);
+    db.todo.create(newtodo).then(function (todo) {
+		res.json(todo.toJSON() );
+    },function (error) {
+    	res.status(404).json(error);
+    });
 });
+
 // function to delete one item
 app.delete('/todos/:id', function (req, res) {
     var todoId = parseInt(req.params.id, 10);
@@ -93,6 +101,10 @@ app.put('/todos/:id', function (req, res) {
     _.extend(matchedTodo, validAttributes);
     res.send(matchedTodo);
 });
-app.listen(PORT, function () {
-    console.log('Express listening on port: ' + PORT);
+
+db.sequelize.sync().then(function () {
+	
+	app.listen(PORT, function () {
+	    console.log('Express listening on port: ' + PORT);
+	});	
 });
