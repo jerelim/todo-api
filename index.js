@@ -113,6 +113,22 @@ app.put('/todos/:id', function (req, res) {
     });
 });
 
+app.post('/users',function (req, res) {
+    var body = req.body;
+    if ( !_.isString(body.email) || body.email.trim().length === 0 || !_.isString(body.password) || body.password.trim().length === 0) {
+        return res.status(400).json('error');
+    }
+    body.email = body.email.trim();
+    body.password = body.password.trim();
+    var newMember = _.pick(body, 'email', 'password');
+
+    db.user.create(newMember).then(function (user) {
+        res.json(user.toJSON() );
+    },function (error) {
+        res.status(404).json(error);
+    });
+});
+
 db.sequelize.sync().then(function () {
 	
 	app.listen(PORT, function () {
