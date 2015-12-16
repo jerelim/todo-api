@@ -133,7 +133,11 @@ app.post('/users',function (req, res) {
 app.post('/users/login',function (req,res) {
     var body = req.body;
     db.user.authenticate(body).then(function (user) {
-        return res.json(user.toPublicJSON());
+        var token = user.generateToken('authentication');
+        if (token) {
+            return res.header('Auth', token ).json(user.toPublicJSON());
+        }
+        res.status(401).send();
     },function (error) {
         res.status(401).send();
     });
