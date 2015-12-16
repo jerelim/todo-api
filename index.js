@@ -123,7 +123,7 @@ app.post('/users',function (req, res) {
     var newMember = _.pick(body, 'email', 'password');
 
     db.user.create(newMember).then(function (user) {
-        res.json(user.toJSON() );
+        res.json(user.toPublicJSON() );
     },function (error) {
         res.status(404).json(error);
     });
