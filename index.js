@@ -62,9 +62,12 @@ app.post('/todos',middleware.requireAuthentication, function (req, res) {
     body.description = body.description.trim();
     var newtodo = _.pick(body, 'description', 'completed');
 
-    console.log(newtodo);
     db.todo.create(newtodo).then(function (todo) {
-		res.json(todo.toJSON() );
+        req.user.addTodo(todo).then(function () {
+            return todo.reload();        
+        }).then(function (todo) {
+            res.json(todo.toJSON() );
+        });
     },function (error) {
     	res.status(404).json(error);
     });
@@ -144,7 +147,7 @@ app.post('/users/login',function (req,res) {
     });
 });
 
-db.sequelize.sync().then(function () {
+db.sequelize.sync({force:true}).then(function () {
 	
 	app.listen(PORT, function () {
 	    console.log('Express listening on port: ' + PORT);
