@@ -16,7 +16,7 @@ app.get('/', function (req, res) {
 // GET /todos?completed=true&q=work
 app.get('/todos',middleware.requireAuthentication , function (req, res) {
     var query = _.pick(req.query, 'q', 'completed');
-    var where = {};
+    var where = {userId: req.user.id};
 
     // var filteredTodos = todos;
     // if filter completed is provided only looking for completed items
@@ -29,6 +29,7 @@ app.get('/todos',middleware.requireAuthentication , function (req, res) {
         	$like:'%' + query.q +'%'
         };
     }
+
     db.todo.findAll({where : where}).then(function (todos) {
     	if (todos) {
     		res.json(todos);
@@ -41,12 +42,13 @@ app.get('/todos',middleware.requireAuthentication , function (req, res) {
 });
 app.get('/todos/:id',middleware.requireAuthentication, function (req, res) {
     var todoid = parseInt(req.params.id, 10);
-    db.todo.findById(todoid).then(function (todo) {
-    	
-    	if (todo) {
+    var where = { id: todoid , userId:req.user.id };
+    db.todo.findOne({where:where}).then(function (todo) {
+        // if no rows were return or the user id is not the same as the one in the todo
+    	if (!todo ) {
+            res.status(404).json({error:'data not found'});
+        }else{
     		res.json(todo.toJSON() );
-    	}else{
-    		res.status(404).json({error:'data not found'});
     	}
     },function (error) {
     	res.status(500).send();
@@ -78,7 +80,8 @@ app.delete('/todos/:id',middleware.requireAuthentication, function (req, res) {
     var todoid = parseInt(req.params.id, 10);
    	db.todo.destroy({
    		where:{
-   			id:todoid
+   			id:todoid,
+            userId:req.user.id
    		}
    	}).then(function (deleted) {
    		if (deleted) {
@@ -94,7 +97,7 @@ app.delete('/todos/:id',middleware.requireAuthentication, function (req, res) {
 app.put('/todos/:id',middleware.requireAuthentication, function (req, res) {
     var body = _.pick(req.body, 'description', 'completed');
     var attributes = {};
-    var todoId = parseInt(req.params.id, 10);
+    var todoid = parseInt(req.params.id, 10);
     
     if (body.hasOwnProperty('completed') ) {
         attributes.completed = body.completed;
@@ -102,13 +105,13 @@ app.put('/todos/:id',middleware.requireAuthentication, function (req, res) {
     if (body.hasOwnProperty('description')) {
         attributes.description = body.description;
     }
-
-    db.todo.findById(todoId).then(function (todo) {
-    	if (todo) {
-    		return todo.update(attributes);
-    	}else {
-    		res.status(404).send();
-    	}
+    var where = { id: todoid , userId:req.user.id };
+    db.todo.findOne({where: where}).then(function (todo) {
+        if (!todo || todo.userId !== req.user.id ) {
+            res.status(404).json({error:'data not found'});
+        }else{
+            return todo.update(attributes);
+        }
     },function (error) {
     	res.status(500).send();
     }).then(function (todo) {
