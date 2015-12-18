@@ -123,6 +123,7 @@ app.put('/todos/:id',middleware.requireAuthentication, function (req, res) {
 
 app.post('/users',function (req, res) {
     var body = req.body;
+
     if ( !_.isString(body.email) || body.email.trim().length === 0 || !_.isString(body.password) || body.password.trim().length === 0) {
         return res.status(400).json('error');
     }
@@ -139,14 +140,26 @@ app.post('/users',function (req, res) {
 
 app.post('/users/login',function (req,res) {
     var body = req.body;
+    var userInstance;
     db.user.authenticate(body).then(function (user) {
         var token = user.generateToken('authentication');
-        if (token) {
-            return res.header('Auth', token ).json(user.toPublicJSON());
-        }
+        userInstance = user;
+        return db.token.create({
+            token: token
+        });
+    }).then(function (tokenInstance) {
+        res.header('Auth', tokenInstance.get('token') ).json(userInstance.toPublicJSON());
+    }).catch(function (error) {
+        console.log(error);
         res.status(401).send();
-    },function (error) {
-        res.status(401).send();
+    });
+});
+
+app.delete('/users/login', middleware.requireAuthentication, function (req ,res) {
+    req.token.destroy().then(function () {
+        res.status(204).send();
+    }).catch(function () {
+        res.status(500).send();
     });
 });
 
